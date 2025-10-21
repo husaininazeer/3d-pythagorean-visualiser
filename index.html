@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>3D Pythagorean Theorem Visualiser</title>
+		<script src="https://cdn.tailwindcss.com"></script>
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+			rel="stylesheet"
+		/>
+		<style>
+			body {
+				font-family: "Inter", sans-serif;
+				overscroll-behavior-y: contain;
+			}
+			canvas {
+				touch-action: none;
+				display: block; /* remove default canvas margin */
+			}
+		</style>
+	</head>
+	<body class="flex flex-col h-screen bg-gray-50 text-gray-800 antialiased">
+		<header class="bg-white shadow-md p-4 z-10">
+			<div class="max-w-7xl mx-auto text-center">
+				<h1 class="text-2xl md:text-3xl font-bold text-gray-900">
+					3D Pythagorean Theorem Visualiser
+				</h1>
+				<p class="text-sm md:text-md text-indigo-600">
+					Splitting the Cuboid
+				</p>
+			</div>
+		</header>
+
+		<main
+			class="flex-grow flex flex-col lg:flex-row items-center justify-center p-4 md:p-8 space-y-4 lg:space-y-0 lg:space-x-8 overflow-hidden"
+		>
+			<div
+				class="w-full lg:w-2/3 h-2/5 lg:h-full max-w-3xl bg-white rounded-2xl shadow-lg border border-gray-200 cursor-grab active:cursor-grabbing overflow-hidden"
+			>
+				<div id="canvas-container" class="w-full h-full"></div>
+			</div>
+
+			<div
+				class="w-full lg:w-1/3 h-3/5 lg:h-auto max-w-md p-6 bg-white rounded-2xl shadow-lg border border-gray-200 overflow-y-auto"
+			>
+				<h2 class="text-xl font-semibold mb-2 text-center">
+					Adjust Dimensions
+				</h2>
+				<p class="text-center text-gray-500 mb-4">
+					Click any 2 corners to measure distance.
+				</p>
+
+				<div class="space-y-6">
+					<div>
+						<label
+							for="sliderL"
+							class="flex justify-between items-center text-lg font-medium text-red-600"
+						>
+							<span>Length (l)</span>
+							<span
+								id="valueL"
+								class="px-3 py-1 bg-red-100 text-red-700 rounded-full text-base font-semibold"
+								>12</span
+							>
+						</label>
+						<input
+							id="sliderL"
+							type="range"
+							min="1"
+							max="20"
+							value="12"
+							class="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+						/>
+					</div>
+					<div>
+						<label
+							for="sliderW"
+							class="flex justify-between items-center text-lg font-medium text-green-600"
+						>
+							<span>Width (w)</span>
+							<span
+								id="valueW"
+								class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-base font-semibold"
+								>6</span
+							>
+						</label>
+						<input
+							id="sliderW"
+							type="range"
+							min="1"
+							max="20"
+							value="6"
+							class="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+						/>
+					</div>
+					<div>
+						<label
+							for="sliderH"
+							class="flex justify-between items-center text-lg font-medium text-blue-600"
+						>
+							<span>Height (h)</span>
+							<span
+								id="valueH"
+								class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-base font-semibold"
+								>9</span
+							>
+						</label>
+						<input
+							id="sliderH"
+							type="range"
+							min="1"
+							max="20"
+							value="9"
+							class="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+						/>
+					</div>
+				</div>
+
+				<div class="mt-8 text-center">
+					<button
+						id="revealBtn"
+						class="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200 ease-in-out disabled:bg-gray-400 disabled:cursor-not-allowed"
+					>
+						Reveal Internal Triangles
+					</button>
+				</div>
+
+				<!-- Measurement Result Display -->
+				<div
+					id="measurement-container"
+					class="text-left bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-r-lg mt-6 space-y-1 hidden"
+				>
+					<h3 class="font-semibold text-gray-800">
+						Measured Distance
+					</h3>
+					<p
+						id="measurement-result"
+						class="font-mono text-gray-600 text-lg"
+					></p>
+				</div>
+
+				<div
+					class="text-left bg-indigo-50 border-l-4 border-indigo-500 p-4 rounded-r-lg mt-6 space-y-4"
+				>
+					<div>
+						<h3 class="font-semibold text-gray-800">
+							Step 1: Find Base Diagonal (f)
+						</h3>
+						<p id="formulaBase" class="font-mono text-gray-600">
+							f² = l² + w²
+						</p>
+						<p id="resultBase" class="font-mono text-gray-600"></p>
+					</div>
+					<div>
+						<h3 class="font-semibold text-gray-800">
+							Step 2: Find Space Diagonal (d)
+						</h3>
+						<p id="formulaSpace" class="font-mono text-gray-600">
+							d² = f² + h²
+						</p>
+						<p id="resultSpace" class="font-mono text-gray-600"></p>
+					</div>
+				</div>
+			</div>
+		</main>
+
+		<script type="importmap">
+			{
+				"imports": {
+					"three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+					"three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+				}
+			}
+		</script>
+
+		<script type="module">
+			import * as THREE from "three";
+			import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+
+			// --- DOM Elements ---
+			const container = document.getElementById("canvas-container");
+			const sliders = {
+				l: document.getElementById("sliderL"),
+				w: document.getElementById("sliderW"),
+				h: document.getElementById("sliderH"),
+			};
+			const values = {
+				l: document.getElementById("valueL"),
+				w: document.getElementById("valueW"),
+				h: document.getElementById("valueH"),
+			};
+			const revealBtn = document.getElementById("revealBtn");
+			const formulaBase = document.getElementById("formulaBase");
+			const resultBase = document.getElementById("resultBase");
+			const formulaSpace = document.getElementById("formulaSpace");
+			const resultSpace = document.getElementById("resultSpace");
+			const measurementContainer = document.getElementById(
+				"measurement-container"
+			);
+			const measurementResult =
+				document.getElementById("measurement-result");
+
+			// --- State ---
+			let dims = {
+				l: +sliders.l.value,
+				w: +sliders.w.value,
+				h: +sliders.h.value,
+			};
+			let isRevealing = false;
+			let selectedVertices = [];
+
+			// --- Three.js Setup ---
+			const scene = new THREE.Scene();
+			scene.background = new THREE.Color(0xffffff);
+			const camera = new THREE.PerspectiveCamera(
+				75,
+				container.clientWidth / container.clientHeight,
+				0.1,
+				1000
+			);
+			camera.position.set(15, 15, 15);
+			const renderer = new THREE.WebGLRenderer({ antialias: true });
+			container.appendChild(renderer.domElement);
+			const controls = new OrbitControls(camera, renderer.domElement);
+			controls.enableDamping = true;
+			scene.add(new THREE.AmbientLight(0xffffff, 1.0));
+			const directionalLight = new THREE.DirectionalLight(0xffffff, 1.0);
+			directionalLight.position.set(10, 20, 5);
+			scene.add(directionalLight);
+
+			// --- Raycasting ---
+			const raycaster = new THREE.Raycaster();
+			const mouse = new THREE.Vector2();
+
+			// --- Object Creation ---
+			let cuboid,
+				baseTriangle,
+				spaceTriangle,
+				verticesGroup,
+				measuredLine;
+			const vertexDefaultMaterial = new THREE.MeshBasicMaterial({
+				color: 0x555555,
+			});
+			const vertexSelectedMaterial = new THREE.MeshBasicMaterial({
+				color: 0xffd700,
+			});
+			const lineMaterial = new THREE.LineBasicMaterial({
+				color: 0xffd700,
+				linewidth: 2,
+			});
+
+			function createGeometry() {
+				// Clean up previous scene objects
+				scene.children
+					.filter(
+						(obj) => obj.isMesh || obj.isLineSegments || obj.isGroup
+					)
+					.forEach((obj) => scene.remove(obj));
+
+				// Ghost cuboid (non-shaded)
+				const geometry = new THREE.BoxGeometry(dims.l, dims.h, dims.w);
+				const material = new THREE.MeshBasicMaterial({
+					color: 0xcccccc,
+					transparent: true,
+					opacity: 0.15,
+				});
+				cuboid = new THREE.Mesh(geometry, material);
+				// scene.add(cuboid); // Removed from scene for a cleaner look
+
+				// Define 8 vertices of the cuboid
+				const p = [
+					new THREE.Vector3(0, 0, 0),
+					new THREE.Vector3(dims.l, 0, 0),
+					new THREE.Vector3(dims.l, 0, dims.w),
+					new THREE.Vector3(0, 0, dims.w),
+					new THREE.Vector3(0, dims.h, 0),
+					new THREE.Vector3(dims.l, dims.h, 0),
+					new THREE.Vector3(dims.l, dims.h, dims.w),
+					new THREE.Vector3(0, dims.h, dims.w),
+				];
+
+				// Create colored edges
+				const edges = new THREE.Group();
+				const redMaterial = new THREE.LineBasicMaterial({
+					color: 0xef4444,
+				});
+				const greenMaterial = new THREE.LineBasicMaterial({
+					color: 0x22c55e,
+				});
+				const blueMaterial = new THREE.LineBasicMaterial({
+					color: 0x3b82f6,
+				});
+
+				const addEdge = (p1, p2, material) => {
+					const geom = new THREE.BufferGeometry().setFromPoints([
+						p1,
+						p2,
+					]);
+					edges.add(new THREE.Line(geom, material));
+				};
+				// Length edges (red)
+				addEdge(p[0], p[1], redMaterial);
+				addEdge(p[3], p[2], redMaterial);
+				addEdge(p[4], p[5], redMaterial);
+				addEdge(p[7], p[6], redMaterial);
+				// Width edges (green)
+				addEdge(p[0], p[3], greenMaterial);
+				addEdge(p[1], p[2], greenMaterial);
+				addEdge(p[4], p[7], greenMaterial);
+				addEdge(p[5], p[6], greenMaterial);
+				// Height edges (blue)
+				addEdge(p[0], p[4], blueMaterial);
+				addEdge(p[1], p[5], blueMaterial);
+				addEdge(p[2], p[6], blueMaterial);
+				addEdge(p[3], p[7], blueMaterial);
+				scene.add(edges);
+
+				// Create clickable vertices (spheres)
+				verticesGroup = new THREE.Group();
+				p.forEach((pos) => {
+					const sphereGeom = new THREE.SphereGeometry(0.3, 16, 16);
+					const vertexSphere = new THREE.Mesh(
+						sphereGeom,
+						vertexDefaultMaterial.clone()
+					);
+					vertexSphere.position.copy(pos);
+					verticesGroup.add(vertexSphere);
+				});
+				scene.add(verticesGroup);
+
+				// Center all objects
+				const centerOffset = new THREE.Vector3(
+					-dims.l / 2,
+					-dims.h / 2,
+					-dims.w / 2
+				);
+				[edges, verticesGroup].forEach((obj) =>
+					obj.position.copy(centerOffset)
+				);
+
+				// Triangles (initially invisible)
+				const basePoints = [p[0], p[1], p[2]];
+				baseTriangle = new THREE.Mesh(
+					new THREE.BufferGeometry().setFromPoints(basePoints),
+					new THREE.MeshBasicMaterial({
+						color: 0x10b981,
+						side: THREE.DoubleSide,
+						transparent: true,
+						opacity: 0,
+					})
+				);
+				baseTriangle.position.copy(centerOffset);
+				scene.add(baseTriangle);
+
+				const spacePoints = [p[0], p[2], p[6]];
+				spaceTriangle = new THREE.Mesh(
+					new THREE.BufferGeometry().setFromPoints(spacePoints),
+					new THREE.MeshBasicMaterial({
+						color: 0x3b82f6,
+						side: THREE.DoubleSide,
+						transparent: true,
+						opacity: 0,
+					})
+				);
+				spaceTriangle.position.copy(centerOffset);
+				scene.add(spaceTriangle);
+
+				clearSelection();
+			}
+
+			function animate() {
+				requestAnimationFrame(animate);
+				controls.update();
+				renderer.render(scene, camera);
+			}
+
+			function updateUI() {
+				dims = {
+					l: +sliders.l.value,
+					w: +sliders.w.value,
+					h: +sliders.h.value,
+				};
+				Object.keys(values).forEach(
+					(key) => (values[key].textContent = dims[key])
+				);
+
+				const f = Math.sqrt(dims.l * dims.l + dims.w * dims.w);
+				const d = Math.sqrt(f * f + dims.h * dims.h);
+
+				formulaBase.innerHTML = `f² = <span class="text-red-500">${dims.l}²</span> + <span class="text-green-500">${dims.w}²</span>`;
+				resultBase.textContent = `f = ${f.toFixed(2)}`;
+				formulaSpace.innerHTML = `d² = <span class="text-yellow-500">${f.toFixed(
+					2
+				)}²</span> + <span class="text-blue-500">${dims.h}²</span>`;
+				resultSpace.textContent = `d = ${d.toFixed(2)}`;
+
+				createGeometry();
+			}
+
+			function handleResize() {
+				const { clientWidth: width, clientHeight: height } = container;
+				renderer.setSize(width, height);
+				renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+				camera.aspect = width / height;
+				camera.updateProjectionMatrix();
+			}
+
+			function clearSelection(resetResult = true) {
+				selectedVertices.forEach(
+					(v) => (v.material = vertexDefaultMaterial)
+				);
+				selectedVertices = [];
+				if (measuredLine) scene.remove(measuredLine);
+				if (resetResult) measurementContainer.classList.add("hidden");
+			}
+
+			function onCanvasClick(event) {
+				const rect = renderer.domElement.getBoundingClientRect();
+				mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+				mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+				raycaster.setFromCamera(mouse, camera);
+
+				const intersects = raycaster.intersectObjects(
+					verticesGroup.children
+				);
+
+				if (intersects.length > 0) {
+					const clickedVertex = intersects[0].object;
+
+					if (selectedVertices.includes(clickedVertex)) {
+						// Deselect
+						clickedVertex.material = vertexDefaultMaterial;
+						selectedVertices = selectedVertices.filter(
+							(v) => v !== clickedVertex
+						);
+						if (measuredLine) scene.remove(measuredLine);
+					} else if (selectedVertices.length < 2) {
+						// Select
+						clickedVertex.material = vertexSelectedMaterial;
+						selectedVertices.push(clickedVertex);
+					}
+
+					if (selectedVertices.length === 2) {
+						const [v1, v2] = selectedVertices;
+						const distance = v1.position.distanceTo(v2.position);
+						measurementResult.textContent = `${distance.toFixed(
+							2
+						)} units`;
+						measurementContainer.classList.remove("hidden");
+
+						// Draw line
+						if (measuredLine) scene.remove(measuredLine);
+						const lineGeom =
+							new THREE.BufferGeometry().setFromPoints([
+								v1.position,
+								v2.position,
+							]);
+						measuredLine = new THREE.Line(lineGeom, lineMaterial);
+						measuredLine.position.copy(verticesGroup.position); // Align with group offset
+						scene.add(measuredLine);
+
+						setTimeout(() => clearSelection(false), 2000);
+					}
+				}
+			}
+
+			// --- Event Listeners ---
+			Object.values(sliders).forEach((slider) =>
+				slider.addEventListener("input", updateUI)
+			);
+			renderer.domElement.addEventListener("click", onCanvasClick);
+
+			revealBtn.addEventListener("click", () => {
+				if (isRevealing) return;
+				isRevealing = true;
+				revealBtn.disabled = true;
+				revealBtn.textContent = "Revealing...";
+				clearSelection();
+
+				let startTime = null;
+				const duration = 1000;
+				function revealAnim(time) {
+					if (!startTime) startTime = time;
+					const progress = Math.min((time - startTime) / duration, 1);
+					baseTriangle.material.opacity = 0.8 * progress;
+					if (progress < 1) requestAnimationFrame(revealAnim);
+					else setTimeout(revealSpaceTriangle, 500);
+				}
+
+				function revealSpaceTriangle() {
+					startTime = null;
+					function revealSpaceAnim(time) {
+						if (!startTime) startTime = time;
+						const progress = Math.min(
+							(time - startTime) / duration,
+							1
+						);
+						spaceTriangle.material.opacity = 0.8 * progress;
+						if (progress < 1)
+							requestAnimationFrame(revealSpaceAnim);
+						else setTimeout(resetReveal, 3000);
+					}
+					requestAnimationFrame(revealSpaceAnim);
+				}
+
+				function resetReveal() {
+					baseTriangle.material.opacity = 0;
+					spaceTriangle.material.opacity = 0;
+					isRevealing = false;
+					revealBtn.disabled = false;
+					revealBtn.textContent = "Reveal Internal Triangles";
+				}
+				requestAnimationFrame(revealAnim);
+			});
+
+			window.addEventListener("resize", handleResize);
+
+			// --- Initial Call ---
+			updateUI();
+			handleResize();
+			animate();
+		</script>
+	</body>
+</html>
