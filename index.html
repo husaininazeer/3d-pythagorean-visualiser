@@ -487,7 +487,7 @@
 					const progress = Math.min((time - startTime) / duration, 1);
 					baseTriangle.material.opacity = 0.8 * progress;
 					if (progress < 1) requestAnimationFrame(revealAnim);
-					else setTimeout(revealSpaceTriangle, 500);
+					else setTimeout(revealSpaceTriangle, 15000);
 				}
 
 				function revealSpaceTriangle() {
